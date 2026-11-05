@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Admin Dashboard</title>
+</head>
+
+<body>
+
+<h1>Reservierungen</h1>
+
+<p>
+    <a href="/logout">
+        Abmelden
+    </a>
+</p>
+
+<table border="1">
+
+<tr>
+    <th>Datum</th>
+    <th>Name</th>
+    <th>Aktion</th>
+</tr>
+
+{% for day, data in reservations.items() %}
+
+<tr>
+
+    <td>{{ day }}</td>
+
+    <td>{{ data.name }}</td>
+
+    <td>
+
+        <form
+          method="post"
+          action="/admin/delete/{{ day }}">
+
+            <button>
+                Löschen
+            </button>
+
+        </form>
+
+    </td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+</html>
