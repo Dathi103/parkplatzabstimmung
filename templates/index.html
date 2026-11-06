@@ -59,27 +59,6 @@ button{
 
 <script>
 
-function getToken(){
-
-    let token =
-        localStorage.getItem(
-            "parking_token"
-        );
-
-    if(!token){
-
-        token =
-            crypto.randomUUID();
-
-        localStorage.setItem(
-            "parking_token",
-            token
-        );
-    }
-
-    return token;
-}
-
 
 async function load(){
 
@@ -175,10 +154,6 @@ function render(entries){
 
         }else{
 
-            const mine =
-                entry.token ===
-                getToken();
-
             div.innerHTML = `
                 <b>${title}</b>
                 <br>
@@ -191,7 +166,7 @@ function render(entries){
                 <br><br>
 
                 ${
-                    mine
+                    entry.editable
                     ?
                     `<button onclick="removeEntry('${key}')">
                         Löschen
@@ -240,8 +215,7 @@ async function reserve(day){
                 body:JSON.stringify({
 
                     day:day,
-                    name:name,
-                    token:getToken()
+                    name:name
 
                 })
             }
@@ -273,8 +247,7 @@ async function removeEntry(day){
 
             body:JSON.stringify({
 
-                day:day,
-                token:getToken()
+                day:day
 
             })
         }

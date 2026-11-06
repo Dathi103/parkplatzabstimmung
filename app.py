@@ -1,7 +1,20 @@
 import os
 import sqlite3
+import secrets
+import dotenv
 
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import (
+    Flask,
+    render_template,
+    request,
+    jsonify,
+    session,
+    redirect,
+    url_for,
+    make_response,
+)
+
+dotenv.load_dotenv()
 
 DB = "parking.db"
 
@@ -40,7 +53,7 @@ def init_db():
     conn.close()
 
 
-def get_reservations():
+def get_reservations_admin():
 
     conn = get_connection()
 
@@ -55,16 +68,52 @@ def get_reservations():
     return {row["day"]: dict(row) for row in rows}
 
 
+def get_reservations_user(token: str):
+
+    conn = get_connection()
+
+    rows = conn.execute("""
+        SELECT day, name, token
+        FROM reservations
+        ORDER BY day
+        """).fetchall()
+
+    response_dict = {}
+
+    for row in rows:
+        response_dict[row["day"]] = {
+            "name": row["name"],
+            "editable": row["token"] == token,
+        }
+
+    conn.close()
+
+    return response_dict
+
+
 @app.route("/")
 def index():
 
-    return render_template("index.html")
+    token = request.cookies.get("user_token")
+
+    if not token:
+        token = secrets.token_urlsafe(32)
+
+    response = make_response(render_template("index.html"))
+
+    response.set_cookie("user_token", token, httponly=True, samesite="Lax")
+
+    return response
 
 
 @app.route("/api/reservations")
 def reservations():
 
-    return jsonify(get_reservations())
+    user_token = request.cookies.get("user_token")
+
+    print(user_token)
+
+    return jsonify(get_reservations_user(user_token))
 
 
 @app.route("/api/reserve", methods=["POST"])
@@ -74,7 +123,7 @@ def reserve():
 
     day = data["day"]
     name = data["name"].strip()
-    token = data["token"]
+    token = request.cookies.get("user_token")
 
     if not name:
 
@@ -112,7 +161,7 @@ def delete_own_entry():
     data = request.json
 
     day = data["day"]
-    token = data["token"]
+    token = request.cookies.get("user_token")
 
     conn = get_connection()
 
@@ -125,17 +174,21 @@ def delete_own_entry():
         (day,),
     ).fetchone()
 
-    if row and row["token"] == token:
+    if not row:
+        return {"success": False, "message": "Eintrag nicht gefunden"}, 404
 
-        conn.execute(
-            """
-            DELETE FROM reservations
-            WHERE day = ?
-            """,
-            (day,),
-        )
+    if row["token"] != token:
+        return {"success": False, "message": "Nicht autorisiert"}, 403
 
-        conn.commit()
+    conn.execute(
+        """
+        DELETE FROM reservations
+        WHERE day = ?
+        """,
+        (day,),
+    )
+
+    conn.commit()
 
     conn.close()
 
@@ -165,7 +218,9 @@ def admin_dashboard():
 
         return redirect(url_for("admin"))
 
-    return render_template("admin_dashboard.html", reservations=get_reservations())
+    return render_template(
+        "admin_dashboard.html", reservations=get_reservations_admin()
+    )
 
 
 @app.route("/admin/delete/<day>", methods=["POST"])
