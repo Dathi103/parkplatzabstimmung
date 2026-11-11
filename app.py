@@ -68,7 +68,7 @@ def get_reservations_admin():
     return {row["day"]: dict(row) for row in rows}
 
 
-def get_reservations_user(token: str):
+def get_reservations_user(token: str | None):
 
     conn = get_connection()
 
@@ -108,11 +108,7 @@ def index():
 
 @app.route("/api/reservations")
 def reservations():
-
     user_token = request.cookies.get("user_token")
-
-    print(user_token)
-
     return jsonify(get_reservations_user(user_token))
 
 
