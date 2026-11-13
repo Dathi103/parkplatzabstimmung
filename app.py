@@ -12,6 +12,7 @@ from flask import (
     redirect,
     url_for,
     make_response,
+    send_from_directory,
 )
 
 dotenv.load_dotenv()
@@ -248,6 +249,11 @@ def logout():
     session.clear()
 
     return redirect("/")
+
+
+@app.route("/robots.txt")
+def robots():
+    return send_from_directory(app.static_folder, "robots.txt")
 
 
 init_db()
