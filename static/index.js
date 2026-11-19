@@ -53,7 +53,7 @@ function render(entries) {
         <b>${title}</b>
         <br>
         <span class="used">
-          Reserviert von <b>${entry.name}</b>
+          Reserviert von <b class=name></b>
         </span>
         <br><br>
         ${
@@ -65,6 +65,7 @@ function render(entries) {
             : ""
         }
       `;
+      div.querySelector(".name").textContent = entry.name;  
     }
 
     root.appendChild(div);
