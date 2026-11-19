@@ -102,16 +102,15 @@ def get_reservations_user(token: str | None):
 
 @app.get("/")
 def index():
-
-    token = request.cookies.get("user_token")
-
-    if not token:
-        token = secrets.token_urlsafe(32)
-
     response = make_response(render_template("index.html"))
-
-    response.set_cookie("user_token", token, httponly=True, samesite="Lax")
-
+    token = request.cookies.get("user_token") or secrets.token_urlsafe(32)
+    response.set_cookie(
+        "user_token",
+        token,
+        httponly=True,
+        samesite="Lax",
+        max_age=60 * 60 * 24 * 365,
+    )
     return response
 
 
