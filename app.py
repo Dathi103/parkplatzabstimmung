@@ -155,6 +155,9 @@ def reserve():
     if not name:
         return {"success": False, "message": "Name fehlt"}, 400
 
+    if len(name) > 50:
+        return {"success": False, "message": "Name zu lang"}, 400
+
     if not token:
         return {"success": False, "message": "User Token fehlt."}, 400
 
@@ -186,42 +189,38 @@ def reserve():
 
 @app.delete("/api/reservation")
 def delete_own_entry():
+    try:
+        data = request.json
+        day = data["day"]
+        token = request.cookies.get("user_token")
+        conn = get_connection()
+        row = conn.execute(
+            """
+            SELECT token
+            FROM reservations
+            WHERE day = ?
+            """,
+            (day,),
+        ).fetchone()
 
-    data = request.json
+        if not row:
+            return {"success": False, "message": "Eintrag nicht gefunden"}, 404
 
-    day = data["day"]
-    token = request.cookies.get("user_token")
+        if row["token"] != token:
+            return {"success": False, "message": "Nicht autorisiert"}, 403
 
-    conn = get_connection()
+        conn.execute(
+            """
+            DELETE FROM reservations
+            WHERE day = ?
+            """,
+            (day,),
+        )
+        conn.commit()
+        return {"success": True}
 
-    row = conn.execute(
-        """
-        SELECT token
-        FROM reservations
-        WHERE day = ?
-        """,
-        (day,),
-    ).fetchone()
-
-    if not row:
-        return {"success": False, "message": "Eintrag nicht gefunden"}, 404
-
-    if row["token"] != token:
-        return {"success": False, "message": "Nicht autorisiert"}, 403
-
-    conn.execute(
-        """
-        DELETE FROM reservations
-        WHERE day = ?
-        """,
-        (day,),
-    )
-
-    conn.commit()
-
-    conn.close()
-
-    return {"success": True}
+    finally:
+        conn.close()
 
 
 @app.route("/admin", methods=["GET", "POST"])
