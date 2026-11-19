@@ -20,7 +20,6 @@ from zoneinfo import ZoneInfo
 
 dotenv.load_dotenv()
 
-TZ = ZoneInfo("Europa/Berlin")
 DB = "parking.db"
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
