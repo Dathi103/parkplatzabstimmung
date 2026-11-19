@@ -39,42 +39,32 @@ function render(entries) {
 
     if (!entry) {
       div.innerHTML = `
-                <b>${title}</b>
-                <br>
-                <span class="free">
-                    Frei
-                </span>
-                <br><br>
-
-                <input
-                    id="i-${key}"
-                    placeholder="Name">
-
-                <button
-                    onclick="reserve('${key}')">
-                    Reservieren
-                </button>
-            `;
+        <b>${title}</b>
+        <br>
+        <span class="free">Frei</span>
+        <br><br>
+        <input id="i-${key}" placeholder="Name">
+        <button onclick="reserve('${key}')">
+          Reservieren
+        </button>
+      `;
     } else {
       div.innerHTML = `
-                <b>${title}</b>
-                <br>
-
-                <span class="used">
-                    Reserviert von
-                    <b>${entry.name}</b>
-                </span>
-
-                <br><br>
-
-                ${
-                  entry.editable
-                    ? `<button onclick="removeEntry('${key}')">
-                        Löschen
-                    </button>`
-                    : ""
-                }
-            `;
+        <b>${title}</b>
+        <br>
+        <span class="used">
+          Reserviert von <b>${entry.name}</b>
+        </span>
+        <br><br>
+        ${
+          entry.editable? `
+            <button onclick="removeEntry('${key}')">
+              Löschen
+            </button>
+            `
+            : ""
+        }
+      `;
     }
 
     root.appendChild(div);
