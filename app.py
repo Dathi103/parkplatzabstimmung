@@ -22,10 +22,13 @@ DB = "parking.db"
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
 if not ADMIN_PASSWORD:
-    raise Exception("ADMIN_PASSWORD Umgebungsvariable fehlt")
+    raise Exception("ADMIN_PASSWORD is not set.")
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "bitte-spaeter-aendern")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY")
+
+if not app.secret_key:
+    raise Exception("FLASK_SECRET_KEY is not set.")
 
 
 def get_connection():
