@@ -202,10 +202,10 @@ def admin():
 
         password = request.form.get("password", "")
 
-        if password == ADMIN_PASSWORD:
-
+        if secrets.compare_digest(
+            password.encode("utf-8"), ADMIN_PASSWORD.encode("utf-8")
+        ):
             session["admin"] = True
-
             return redirect(url_for("admin_dashboard"))
 
     return render_template("admin_login.html")
