@@ -15,10 +15,13 @@ from flask import (
     send_from_directory,
 )
 
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
+
 dotenv.load_dotenv()
 
+TZ = ZoneInfo("Europa/Berlin")
 DB = "parking.db"
-
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
 if not ADMIN_PASSWORD:
@@ -34,6 +37,21 @@ app.config.update(
 
 if not app.secret_key:
     raise Exception("FLASK_SECRET_KEY is not set.")
+
+
+def parse_day(day: str) -> str | None:
+    if not isinstance(day, str):
+        return None
+
+    try:
+        parsed_day = date.fromisoformat(day)
+    except ValueError:
+        return None
+
+    if parsed_day.isoformat() != day:
+        return None
+
+    return day
 
 
 def get_connection():
@@ -123,15 +141,23 @@ def reservations():
 @app.post("/api/reservation")
 def reserve():
 
-    data = request.json
+    data = request.get_json(silent=True)
 
-    day = data["day"]
-    name = data["name"].strip()
+    if not isinstance(data, dict):
+        return {"success": False, "message": "Ungültige Anfrage"}, 400
+
+    day = parse_day(data.get("day"))
+    name = data.get("name", "").strip()
     token = request.cookies.get("user_token")
 
-    if not name:
+    if day is None:
+        return {"success": False, "message": "Ungültiges Datum"}, 400
 
+    if not name:
         return {"success": False, "message": "Name fehlt"}, 400
+
+    if not token:
+        return {"success": False, "message": "User Token fehlt."}, 400
 
     conn = get_connection()
 
