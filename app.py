@@ -26,6 +26,11 @@ if not ADMIN_PASSWORD:
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
+app.config.update(
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+)
 
 if not app.secret_key:
     raise Exception("FLASK_SECRET_KEY is not set.")
