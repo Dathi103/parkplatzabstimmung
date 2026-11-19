@@ -92,7 +92,7 @@ def get_reservations_user(token: str | None):
     return response_dict
 
 
-@app.route("/")
+@app.get("/")
 def index():
 
     token = request.cookies.get("user_token")
@@ -107,13 +107,13 @@ def index():
     return response
 
 
-@app.route("/api/reservations")
+@app.get("/api/reservations")
 def reservations():
     user_token = request.cookies.get("user_token")
     return jsonify(get_reservations_user(user_token))
 
 
-@app.route("/api/reserve", methods=["POST"])
+@app.post("/api/reservation")
 def reserve():
 
     data = request.json
@@ -152,7 +152,7 @@ def reserve():
         conn.close()
 
 
-@app.route("/api/delete", methods=["POST"])
+@app.delete("/api/reservation")
 def delete_own_entry():
 
     data = request.json

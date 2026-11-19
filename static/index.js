@@ -1,78 +1,40 @@
-async function load(){
-
-    const response =
-        await fetch(
-            "/api/reservations"
-        );
-
-    const data =
-        await response.json();
-
-    render(data);
+async function load() {
+  const response = await fetch("/api/reservations");
+  const data = await response.json();
+  render(data);
 }
 
-
-function formatDate(date){
-
-    return date
-        .toISOString()
-        .split("T")[0];
+function formatDate(date) {
+  return date.toISOString().split("T")[0];
 }
 
+function render(entries) {
+  const root = document.getElementById("container");
+  root.innerHTML = "";
 
-function render(entries){
+  for (let i = 0; i < 90; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
 
-    const root =
-        document.getElementById(
-            "container"
-        );
+    const key = formatDate(d);
+    const entry = entries[key];
 
-    root.innerHTML = "";
+    const div = document.createElement("div");
+    div.className = "day";
 
-    for(let i=0;i<90;i++){
+    if (d.getDay() === 0 || d.getDay() === 6) {
+      div.classList.add("weekend");
+    }
 
-        const d = new Date();
+    const title = d.toLocaleDateString("de-DE", {
+      weekday: "long",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
 
-        d.setDate(
-            d.getDate()+i
-        );
-
-        const key =
-            formatDate(d);
-
-        const entry =
-            entries[key];
-
-        const div =
-            document.createElement(
-                "div"
-            );
-
-        div.className = "day";
-
-        if(
-            d.getDay()===0 ||
-            d.getDay()===6
-        ){
-            div.classList.add(
-                "weekend"
-            );
-        }
-
-        const title =
-            d.toLocaleDateString(
-                "de-DE",
-                {
-                    weekday:"long",
-                    day:"2-digit",
-                    month:"2-digit",
-                    year:"numeric"
-                }
-            );
-
-        if(!entry){
-
-            div.innerHTML = `
+    if (!entry) {
+      div.innerHTML = `
                 <b>${title}</b>
                 <br>
                 <span class="free">
@@ -89,10 +51,8 @@ function render(entries){
                     Reservieren
                 </button>
             `;
-
-        }else{
-
-            div.innerHTML = `
+    } else {
+      div.innerHTML = `
                 <b>${title}</b>
                 <br>
 
@@ -104,95 +64,53 @@ function render(entries){
                 <br><br>
 
                 ${
-                    entry.editable
-                    ?
-                    `<button onclick="removeEntry('${key}')">
+                  entry.editable
+                    ? `<button onclick="removeEntry('${key}')">
                         Löschen
                     </button>`
-                    :
-                    ""
+                    : ""
                 }
             `;
-        }
-
-        root.appendChild(div);
-    }
-}
-
-
-async function reserve(day){
-
-    const name =
-        document
-        .getElementById(
-            `i-${day}`
-        )
-        .value
-        .trim();
-
-    if(!name){
-
-        alert(
-            "Bitte Namen eingeben"
-        );
-
-        return;
     }
 
-    const response =
-        await fetch(
-            "/api/reserve",
-            {
-                method:"POST",
+    root.appendChild(div);
+  }
+}
 
-                headers:{
-                    "Content-Type":
-                    "application/json"
-                },
+async function reserve(day) {
+  const name = document.getElementById(`i-${day}`).value.trim();
 
-                body:JSON.stringify({
+  if (!name) {
+    alert("Bitte Namen eingeben");
+    return;
+  }
 
-                    day:day,
-                    name:name
+  const response = await fetch("/api/reservation", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      day: day,
+      name: name,
+    }),
+  });
 
-                })
-            }
-        );
+  if (!response.ok) {
+    alert("Der Tag ist bereits reserviert.");
+  }
 
-    if(!response.ok){
+  load();
+}
 
-        alert(
-            "Der Tag ist bereits reserviert."
-        );
+async function removeEntry(day) {
+  await fetch(
+    "/api/reservation", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ day: day })
     }
+  );
 
-    load();
+  load();
 }
-
-
-async function removeEntry(day){
-
-    await fetch(
-        "/api/delete",
-        {
-
-            method:"POST",
-
-            headers:{
-                "Content-Type":
-                "application/json"
-            },
-
-            body:JSON.stringify({
-
-                day:day
-
-            })
-        }
-    );
-
-    load();
-}
-
 
 load();
