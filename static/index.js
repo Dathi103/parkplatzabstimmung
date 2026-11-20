@@ -80,30 +80,51 @@ async function reserve(day) {
     return;
   }
 
-  const response = await fetch("/api/reservation", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      day: day,
-      name: name,
-    }),
-  });
+  try {
+    const response = await fetch("/api/reservation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        day: day,
+        name: name,
+      }),
+    });
 
-  if (!response.ok) {
-    alert("Der Tag ist bereits reserviert.");
+    if (!response.ok) {
+      let message = "Unbekannter Fehler";
+
+      try {
+        const data = await response.json()
+        message = data.message || message;
+      } catch {
+
+      }
+
+      alert(message)
+    }
+  } catch {
+    alert("Server nicht erreichbar.")
   }
 
   load();
 }
 
 async function removeEntry(day) {
-  await fetch(
-    "/api/reservation", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ day: day })
+  try {
+    const response = await fetch(
+      "/api/reservation", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ day: day })
+      }
+    );
+
+    if (!response.ok) {
+      alert("Löschen fehlgeschlagen");
     }
-  );
+  } catch {
+    alert("Server nicht erreichbar");
+  }
 
   load();
 }
