@@ -189,11 +189,23 @@ def reserve():
 
 @app.delete("/api/reservation")
 def delete_own_entry():
+
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return {"success": False, "message": "Ungültige Anfrage"}, 400
+
+    day = data.get("day")
+    token = request.cookies.get("user_token")
+
+    if day is None:
+        return {"success": False, "message": "Kein Datum angegeben"}, 400
+    if not token:
+        return {"success": False, "message": "User Token fehlt."}, 400
+
+    conn = get_connection()
+
     try:
-        data = request.json
-        day = data["day"]
-        token = request.cookies.get("user_token")
-        conn = get_connection()
         row = conn.execute(
             """
             SELECT token
