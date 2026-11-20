@@ -15,8 +15,7 @@ from flask import (
     send_from_directory,
 )
 
-from datetime import date, datetime, timedelta
-from zoneinfo import ZoneInfo
+from datetime import date
 
 dotenv.load_dotenv()
 
@@ -127,6 +126,7 @@ def index():
         httponly=True,
         samesite="Lax",
         max_age=60 * 60 * 24 * 365,
+        secure=True,
     )
     return response
 
@@ -146,20 +146,22 @@ def reserve():
         return {"success": False, "message": "Ungültige Anfrage"}, 400
 
     day = parse_day(data.get("day"))
-    name = data.get("name", "").strip()
+    name = data.get("name")
     token = request.cookies.get("user_token")
+
+    if not token:
+        return {"success": False, "message": "User Token fehlt."}, 400
 
     if day is None:
         return {"success": False, "message": "Ungültiges Datum"}, 400
 
-    if not name:
+    if not isinstance(name, str) or not name.strip():
         return {"success": False, "message": "Name fehlt"}, 400
+
+    name = name.strip()
 
     if len(name) > 50:
         return {"success": False, "message": "Name zu lang"}, 400
-
-    if not token:
-        return {"success": False, "message": "User Token fehlt."}, 400
 
     conn = get_connection()
 
@@ -198,7 +200,7 @@ def delete_own_entry():
     day = data.get("day")
     token = request.cookies.get("user_token")
 
-    if day is None:
+    if not isinstance(day, str):
         return {"success": False, "message": "Kein Datum angegeben"}, 400
     if not token:
         return {"success": False, "message": "User Token fehlt."}, 400
